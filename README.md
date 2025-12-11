@@ -7,11 +7,7 @@ Thank you once again for being a part of this journey. Keep building amazing thi
 
 Best regards,
 
-@salman0ansari 
-- mailto:salman0ansariii@gmail.com
-- https://telegram.dog/salman0ansari
-
-
+- mailto:ruanalvesbarbosa@gmail.com
 
 
 
