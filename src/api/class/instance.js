@@ -59,14 +59,16 @@ class WhatsAppInstance {
     }
 
     async SendWebhook(type, body, key) {
+        console.log(this.instance.customWebhook)
         if (!this.allowWebhook) return
         this.axiosInstance
-            .post('', {
+            .post(this.webhook, {
                 type,
                 body,
                 instanceKey: key,
             })
             .catch(() => {})
+            
     }
 
     async init() {
@@ -300,8 +302,13 @@ class WhatsAppInstance {
                     ['all', 'messages', 'messages.upsert'].some((e) =>
                         config.webhookAllowedEvents.includes(e)
                     )
-                )
+                ){
                     await this.SendWebhook('message', webhookData, this.key)
+                } else {
+
+                    await this.SendWebhook('message', webhookData, this.key)
+
+                }
             })
         })
 
