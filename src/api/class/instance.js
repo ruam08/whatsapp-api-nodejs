@@ -270,29 +270,53 @@ class WhatsAppInstance {
                     ...msg,
                 }
 
+                const toDataUri = (base64Content, mimeType) => {
+                    if (!base64Content) return ''
+                    const safeMimeType = mimeType || 'application/octet-stream'
+                    return `data:${safeMimeType};base64,${base64Content}`
+                }
+
                 if (messageType === 'conversation') {
                     webhookData['text'] = m
                 }
                 if (config.webhookBase64) {
                     switch (messageType) {
                         case 'imageMessage':
-                            webhookData['msgContent'] = await downloadMessage(
+                            {
+                            const base64Content = await downloadMessage(
                                 msg.message.imageMessage,
                                 'image'
                             )
+                            webhookData['msgContent'] = toDataUri(
+                                base64Content,
+                                msg.message.imageMessage?.mimetype
+                            )
                             break
+                            }
                         case 'videoMessage':
-                            webhookData['msgContent'] = await downloadMessage(
+                            {
+                            const base64Content = await downloadMessage(
                                 msg.message.videoMessage,
                                 'video'
                             )
+                            webhookData['msgContent'] = toDataUri(
+                                base64Content,
+                                msg.message.videoMessage?.mimetype
+                            )
                             break
+                            }
                         case 'audioMessage':
-                            webhookData['msgContent'] = await downloadMessage(
+                            {
+                            const base64Content = await downloadMessage(
                                 msg.message.audioMessage,
                                 'audio'
                             )
+                            webhookData['msgContent'] = toDataUri(
+                                base64Content,
+                                msg.message.audioMessage?.mimetype
+                            )
                             break
+                            }
                         default:
                             webhookData['msgContent'] = ''
                             break
