@@ -4,6 +4,7 @@ const pino = require('pino')
 const {
     default: makeWASocket,
     DisconnectReason,
+    fetchLatestWaWebVersion,
 } = require('@whiskeysockets/baileys')
 const { unlinkSync } = require('fs')
 const { v4: uuidv4 } = require('uuid')
@@ -77,6 +78,21 @@ class WhatsAppInstance {
         this.authState = { state: state, saveCreds: saveCreds }
         this.socketConfig.auth = this.authState.state
         this.socketConfig.browser = Object.values(config.browser)
+
+        try {
+            const { version, isLatest } = await fetchLatestWaWebVersion()
+            this.socketConfig.version = version
+            logger.info(
+                `[${this.key}] Using WA Web version ${version.join('.')} (latest=${isLatest})`
+            )
+        } catch (error) {
+            // Fallback para evitar quebra de inicialização quando a busca de versão falhar
+            this.socketConfig.version = [2, 3000, 1020608496]
+            logger.warn(
+                `[${this.key}] Failed to fetch latest WA Web version. Using fallback ${this.socketConfig.version.join('.')} - ${error?.message || error}`
+            )
+        }
+
         this.instance.sock = makeWASocket(this.socketConfig)
         this.setHandler()
         return this
@@ -94,10 +110,14 @@ class WhatsAppInstance {
             if (connection === 'connecting') return
 
             if (connection === 'close') {
+                const disconnectCode = lastDisconnect?.error?.output?.statusCode
+                logger.warn(
+                    `[${this.key}] Connection closed. code=${disconnectCode}`
+                )
+
                 // reconnect if not logged out
                 if (
-                    lastDisconnect?.error?.output?.statusCode !==
-                    DisconnectReason.loggedOut
+                    disconnectCode !== DisconnectReason.loggedOut
                 ) {
                     await this.init()
                 } else {
@@ -105,6 +125,9 @@ class WhatsAppInstance {
                         logger.info('STATE: Droped collection')
                     })
                     this.instance.online = false
+                    logger.warn(
+                        `[${this.key}] Session logged out. Re-authentication via QR code is required.`
+                    )
                 }
 
                 if (
